@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .warning-box {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
+    .urgent-box {
+      background: #f8d7da;
+      border: 2px solid #dc3545;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
+    .countdown {
+      text-align: center;
+      font-size: 48px;
+      font-weight: bold;
+      color: #dc3545;
+      margin: 20px 0;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: #dc3545;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⏰ Rappel de Paiement</h1>
+    </div>
+    <div class="content">
+      <h2>Bonjour {{firstname}},</h2>
+      
+      <p>Ceci est un rappel concernant votre paiement pour le Sol <strong>{{solName}}</strong>.</p>
+      
+      {{#if daysRemaining}}
+        {{#if (gt daysRemaining 3)}}
+          <div class="warning-box">
+            <h3 style="margin-top: 0; color: #856404;">⏰ Paiement à effectuer</h3>
+            <p><strong>Il vous reste {{daysRemaining}} jours</strong> pour effectuer votre paiement du tour #{{tourNumber}}.</p>
+          </div>
+        {{else}}
+          <div class="urgent-box">
+            <h3 style="margin-top: 0; color: #721c24;">⚠️ URGENT - Paiement à effectuer</h3>
+            <div class="countdown">{{daysRemaining}}</div>
+            <p style="text-align: center;"><strong>Jour(s) restant(s)</strong></p>
+            <p>Votre paiement du tour #{{tourNumber}} doit être effectué rapidement pour respecter le cycle du Sol.</p>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class="urgent-box">
+          <h3 style="margin-top: 0; color: #721c24;">⚠️ URGENT - Paiement en retard</h3>
+          <p>Votre paiement pour le tour #{{tourNumber}} est en retard. Merci de régulariser votre situation au plus vite.</p>
+        </div>
+      {{/if}}
+
+      <div style="background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 20px; margin: 20px 0; border-radius: 5px;">
+        <h3 style="margin-top: 0; color: #17a2b8;">📋 Informations du paiement</h3>
+        <p><strong>Sol :</strong> {{solName}}</p>
+        <p><strong>Tour :</strong> #{{tourNumber}}</p>
+        <p><strong>💰 Montant à payer :</strong> {{amount}} HTG</p>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="http://localhost:5173/sols/{{solId}}" class="button">Effectuer le paiement</a>
+      </div>
+
+      <p><strong>Important :</strong> Le respect des échéances est essentiel pour le bon fonctionnement du Sol et la confiance entre tous les participants.</p>
+      
+      <p>Cordialement,<br>
+      <strong>L'équipe Sol Numérique</strong></p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Sol Numérique. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>

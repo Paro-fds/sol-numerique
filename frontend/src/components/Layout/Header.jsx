@@ -190,7 +190,7 @@ const Header = () => {
           </MenuItem>
         )}
 
-        {isAdmin() && (
+        {isAdmin && (
           <>
             <Divider />
             <MenuItem onClick={handleAdminClick}>

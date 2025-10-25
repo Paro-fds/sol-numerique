@@ -141,6 +141,17 @@ router.post('/refresh-token',
   ErrorHandler.asyncWrapper(authController.refreshToken)
 );
 
+/**
+ * @route   GET /api/auth/verify
+ * @desc    Vérifier si le token JWT est valide
+ * @access  Private
+ * ⭐ NOUVELLE ROUTE AJOUTÉE ⭐
+ */
+router.get('/verify', 
+  AuthMiddleware.authenticateToken,
+  ErrorHandler.asyncWrapper(authController.verifyToken)
+);
+
 // Routes protégées
 router.post('/logout', 
   AuthMiddleware.authenticateToken,
@@ -181,8 +192,6 @@ router.post('/mfa/verify',
   ErrorHandler.asyncWrapper(authController.verifyMFA)
 );
 
-// ... (suite de votre code)
-
 router.post('/mfa/disable', 
   AuthMiddleware.authenticateToken,
   [
@@ -190,7 +199,7 @@ router.post('/mfa/disable',
       .notEmpty()
       .withMessage('Password is required')
   ],
-  ErrorHandler.asyncWrapper(authController.disableMFA) // J'ai ajouté l'appel au contrôleur
+  ErrorHandler.asyncWrapper(authController.disableMFA)
 );
 
 // --- EXPORTATION FINALE ---

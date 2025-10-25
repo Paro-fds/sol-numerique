@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ AJOUTÉ
 import {
   Box,
   Typography,
@@ -14,15 +15,35 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider
 } from '@mui/material';
-import { Download, Receipt as ReceiptIcon } from '@mui/icons-material';
-import { paymentAPI } from '../services/api';
+import { 
+  Download, 
+  Receipt as ReceiptIcon,
+  Add as AddIcon, // ✅ AJOUTÉ
+  Payment as PaymentIcon // ✅ AJOUTÉ
+} from '@mui/icons-material';
+import { paymentAPI, solAPI } from '../services/api'; // ✅ MODIFIÉ
 import toast from 'react-hot-toast';
 
 const PaymentsPage = () => {
+  const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ NOUVEAU - État pour la modal de sélection de sol
+  const [openSolDialog, setOpenSolDialog] = useState(false);
+  const [mySols, setMySols] = useState([]);
+  const [loadingSols, setLoadingSols] = useState(false);
 
   useEffect(() => {
     loadPayments();
@@ -39,6 +60,36 @@ const PaymentsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ NOUVEAU - Charger mes sols
+  const loadMySols = async () => {
+    try {
+      setLoadingSols(true);
+      const response = await solAPI.getMySols();
+      // Filtrer seulement les sols actifs
+      const activeSols = (response.data.sols || []).filter(
+        sol => sol.statut === 'active'
+      );
+      setMySols(activeSols);
+    } catch (error) {
+      console.error('Error loading sols:', error);
+      toast.error('Erreur lors du chargement des sols');
+    } finally {
+      setLoadingSols(false);
+    }
+  };
+
+  // ✅ NOUVEAU - Ouvrir la modal de sélection
+  const handleOpenPaymentDialog = () => {
+    setOpenSolDialog(true);
+    loadMySols();
+  };
+
+  // ✅ NOUVEAU - Sélectionner un sol et aller à la page de paiement
+  const handleSelectSol = (solId) => {
+    setOpenSolDialog(false);
+    navigate(`/sols/${solId}`); // Redirige vers la page de détails du sol
   };
 
   const getStatusColor = (status) => {
@@ -107,14 +158,28 @@ const PaymentsPage = () => {
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-          Historique des Paiements
-        </Typography>
-        <Typography variant="body1" color="textSecondary">
-          Consultez tous vos paiements et reçus
-        </Typography>
+      {/* Header avec bouton Nouveau Paiement */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+            Historique des Paiements
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            Consultez tous vos paiements et reçus
+          </Typography>
+        </Box>
+        
+        {/* ✅ NOUVEAU - Bouton pour effectuer un paiement */}
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<AddIcon />}
+          onClick={handleOpenPaymentDialog}
+          sx={{ height: 'fit-content' }}
+        >
+          Effectuer un Paiement
+        </Button>
       </Box>
 
       {/* Statistiques */}
@@ -135,7 +200,7 @@ const PaymentsPage = () => {
               Montant Total
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}€
+              {payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)} HTG
             </Typography>
           </CardContent>
         </Card>
@@ -153,7 +218,18 @@ const PaymentsPage = () => {
 
       {/* Tableau des paiements */}
       {payments.length === 0 ? (
-        <Alert severity="info">
+        <Alert 
+          severity="info"
+          action={
+            <Button 
+              color="inherit" 
+              size="small"
+              onClick={handleOpenPaymentDialog}
+            >
+              Effectuer un paiement
+            </Button>
+          }
+        >
           Vous n'avez pas encore effectué de paiement
         </Alert>
       ) : (
@@ -187,7 +263,7 @@ const PaymentsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {parseFloat(payment.amount).toFixed(2)}€
+                        {parseFloat(payment.amount).toFixed(2)} HTG
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -220,6 +296,56 @@ const PaymentsPage = () => {
           </TableContainer>
         </Card>
       )}
+
+      {/* ✅ NOUVEAU - Dialog pour sélectionner un sol */}
+      <Dialog 
+        open={openSolDialog} 
+        onClose={() => setOpenSolDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PaymentIcon />
+            <Typography variant="h6">
+              Sélectionnez un Sol
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {loadingSols ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : mySols.length === 0 ? (
+            <Alert severity="info">
+              Vous n'avez pas de sol actif. Rejoignez ou créez un sol pour effectuer des paiements.
+            </Alert>
+          ) : (
+            <List>
+              {mySols.map((sol, index) => (
+                <React.Fragment key={sol.id}>
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleSelectSol(sol.id)}>
+                      <ListItemText
+                        primary={sol.nom}
+                        secondary={`${sol.montant_par_periode} HTG - ${sol.frequence}`}
+                        primaryTypographyProps={{ fontWeight: 500 }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  {index < mySols.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSolDialog(false)}>
+            Annuler
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

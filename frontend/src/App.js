@@ -1,239 +1,159 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
-
-// Import des hooks
 import { useAuth } from './context/AuthContext';
 
-// Import des composants de layout
+// Layout
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 
-// Import des pages
+// Pages publiques
 import { 
   HomePage, 
   LoginPage, 
   RegisterPage, 
-  DashboardPage, 
-  ProfilePage, 
   NotFoundPage 
 } from './pages';
+
+// Pages authentifiées
+import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import SolsPage from './pages/SolsPage';
 import CreateSolPage from './pages/CreateSolPage';
 import SolDetailsPage from './pages/SolDetailsPage';
-import PaymentsPage from './pages/PaymentsPage';
-import PaymentForm from './components/Payment/PaymentForm';
+import PaymentsHistoryPage from './pages/PaymentsHistoryPage';
+import JoinSolPage from './pages/JoinSolPage';
+//import TransfersPage from './pages/TransfersPage';  // ⭐ AJOUTER
+import SettingsPage from './pages/SettingsPage';        // ✅ NOUVEAU
+import HelpPage from './pages/HelpPage';                // ✅ NOUVEAU
+import AdminPaymentsPage from './pages/AdminPaymentsPage';
+
+// Pages de paiement (publiques)
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
+
+// Pages admin
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminReceiptsPage from './pages/AdminReceiptsPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import TransfersPage from './pages/admin/TransfersPage';
 
-// Import des composants utilitaires
+// Utilitaires
 import ProtectedRoute from './components/Common/ProtectedRoute';
 
 function App() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Affichage du loader pendant la vérification de l'authentification
+  // Loader pendant la vérification
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: 'background.default'
-        }}
-      >
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center',
+        minHeight: '100vh'
+      }}>
         <CircularProgress size={60} sx={{ mb: 2 }} />
         <Typography variant="h6" color="textSecondary">
-          Chargement de Sol Numérique...
+          Chargement...
         </Typography>
       </Box>
     );
   }
 
-  // Rendu pour les utilisateurs non authentifiés
-  if (!isAuthenticated) {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Box>
-    );
-  }
-
-  // Rendu pour les utilisateurs authentifiés
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar de navigation */}
-      <Sidebar />
+    <Routes>
+      {/* ========================================
+          ROUTES PUBLIQUES (sans authentification)
+      ======================================== */}
       
-      {/* Contenu principal */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          backgroundColor: 'background.default',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        {/* Header */}
-        <Header />
-        
-        {/* Zone de contenu */}
-        <Box sx={{ flexGrow: 1, p: 3 }}>
-          <Routes>
-            {/* Page d'accueil après connexion */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Profil utilisateur */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Routes des sols */}
-           // Routes des sols
-<Route
-  path="/sols"
-  element={
-    <ProtectedRoute>
-      <SolsPage />
-    </ProtectedRoute>
-  }
-/>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/transfers" element={<TransfersPage />} />  // ⭐ AJOUTER
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/help" element={<HelpPage />} />
+      
+      {/* ✅ ROUTES DE PAIEMENT - PUBLIQUES */}
+      <Route path="/payments/success" element={<PaymentSuccessPage />} />
+      <Route path="/payments/cancel" element={<PaymentCancelPage />} />
+      {/* Routes admin */}
 
-<Route
-  path="/sols/create"
-  element={
-    <ProtectedRoute>
-      <CreateSolPage />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/sols/:id"
-  element={
-    <ProtectedRoute>
-      <SolDetailsPage />
-    </ProtectedRoute>
-  }
-/>
-            
-            {/* Routes des paiements */}
-           // Routes des paiements
-<Route
-  path="/payments"
-  element={
-    <ProtectedRoute>
-      <PaymentsPage />
-    </ProtectedRoute>
-  }
-/>
-            
-            {/* Routes d'administration */}
-            // Routes d'administration
-<Route
-  path="/admin"
-  element={
-    <ProtectedRoute requireAdmin>
-      <AdminDashboardPage />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/admin/receipts"
-  element={
-    <ProtectedRoute requireAdmin>
-      <AdminReceiptsPage />
-    </ProtectedRoute>
-  }
-/>
-            
-            <Route
-              path="/admin/users"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h5" gutterBottom>
-                      Gestion des Utilisateurs
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Fonctionnalité en cours de développement
-                    </Typography>
-                  </Box>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/admin/receipts"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h5" gutterBottom>
-                      Validation des Reçus
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Fonctionnalité en cours de développement
-                    </Typography>
-                  </Box>
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Paramètres et autres */}
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h5" gutterBottom>
-                      Paramètres
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Fonctionnalité en cours de développement
-                    </Typography>
-                  </Box>
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Page 404 */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Box>
-      </Box>
-    </Box>
+<Route path="/admin/payments" element={<AdminPaymentsPage />} />  {/* ⭐ AJOUTER */}
+<Route path="/admin/receipts" element={<AdminPaymentsPage />} />  {/* Alternative */}
+<Route path="/admin/transfers" element={<TransfersPage />} />
+<Route path="/admin/users" element={<AdminUsersPage />} />
+      
+      {/* ========================================
+          ROUTES AUTHENTIFIÉES
+      ======================================== */}
+      
+      {!isAuthenticated ? (
+        // Si non authentifié, rediriger tout vers login
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      ) : (
+        // Si authentifié, afficher l'interface complète avec sidebar
+        <Route
+          path="*"
+          element={
+            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+              <Sidebar />
+              <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                <Header />
+                <Box sx={{ flexGrow: 1, p: 3 }}>
+                  <Routes>
+                    {/* Dashboard */}
+                    <Route path="/" element={<DashboardPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    
+                    {/* Profil */}
+                    <Route path="/profile" element={<ProfilePage />} />
+                    
+                    {/* Sols */}
+                    <Route path="/sols" element={<SolsPage />} />
+                    <Route path="/sols/create" element={<CreateSolPage />} />
+                    <Route path="/sols/join" element={<JoinSolPage />} />
+                    <Route path="/sols/:id" element={<SolDetailsPage />} />
+                    
+                    {/* Paiements */}
+                    <Route path="/payments" element={<PaymentsHistoryPage />} />
+                    
+                    {/* Admin */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/receipts"
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminReceiptsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/users"
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminUsersPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    
+                    {/* 404 */}
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Box>
+              </Box>
+            </Box>
+          }
+        />
+      )}
+    </Routes>
   );
 }
 

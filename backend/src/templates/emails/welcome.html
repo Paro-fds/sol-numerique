@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .content h2 {
+      color: #667eea;
+      margin-top: 0;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .button:hover {
+      background: #5568d3;
+    }
+    .info-box {
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .features {
+      margin: 30px 0;
+    }
+    .feature-item {
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .feature-item:last-child {
+      border-bottom: none;
+    }
+    .feature-item strong {
+      color: #667eea;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 Bienvenue sur Sol Numérique !</h1>
+    </div>
+    <div class="content">
+      <h2>Bonjour {{firstname}} {{lastname}},</h2>
+      
+      <p>Nous sommes ravis de vous accueillir sur <strong>Sol Numérique</strong>, la plateforme moderne de gestion des Sols (tontines) !</p>
+      
+      <div class="info-box">
+        <p><strong>✅ Votre compte a été créé avec succès</strong></p>
+        <p>Email : <strong>{{email}}</strong></p>
+      </div>
+
+      <div class="features">
+        <h3>🌟 Découvrez nos fonctionnalités :</h3>
+        
+        <div class="feature-item">
+          <strong>💰 Créez ou rejoignez des Sols</strong><br>
+          Organisez vos tontines en toute simplicité
+        </div>
+        
+        <div class="feature-item">
+          <strong>📊 Suivez vos paiements</strong><br>
+          Tableau de bord complet et historique détaillé
+        </div>
+        
+        <div class="feature-item">
+          <strong>🔔 Notifications automatiques</strong><br>
+          Restez informé de chaque étape
+        </div>
+        
+        <div class="feature-item">
+          <strong>🔒 Sécurité maximale</strong><br>
+          Vos données sont chiffrées et protégées
+        </div>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="http://localhost:5173" class="button">Accéder à mon compte</a>
+      </div>
+
+      <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+      
+      <p>Cordialement,<br>
+      <strong>L'équipe Sol Numérique</strong></p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Sol Numérique. Tous droits réservés.</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre directement.</p>
+    </div>
+  </div>
+</body>
+</html>

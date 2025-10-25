@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .content h2 {
+      color: #28a745;
+      margin-top: 0;
+    }
+    .info-box {
+      background: #f8f9fa;
+      border-left: 4px solid #28a745;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .info-box p {
+      margin: 8px 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #28a745;
+      color: white;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎊 Félicitations !</h1>
+    </div>
+    <div class="content">
+      <h2>Bonjour {{firstname}},</h2>
+      
+      <p>Vous avez rejoint avec succès le Sol :</p>
+      
+      <div class="info-box">
+        <h3 style="margin-top: 0; color: #28a745;">📋 {{solName}}</h3>
+        {{#if solDescription}}
+        <p><em>{{solDescription}}</em></p>
+        {{/if}}
+        
+        <p><strong>💰 Montant par période :</strong> {{montant}} HTG</p>
+        <p><strong>📅 Fréquence :</strong> {{frequence}}</p>
+        <p><strong>👥 Participants max :</strong> {{maxParticipants}}</p>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <p>Votre numéro d'ordre :</p>
+        <span class="badge">#{{ordre}}</span>
+      </div>
+
+      <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <p><strong>⚠️ Important :</strong></p>
+        <p>Assurez-vous d'avoir configuré vos informations bancaires dans votre profil pour recevoir vos paiements.</p>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="http://localhost:5173/sols/{{solId}}" class="button">Voir le Sol</a>
+      </div>
+
+      <p>Vous recevrez des notifications pour chaque étape importante.</p>
+      
+      <p>Cordialement,<br>
+      <strong>L'équipe Sol Numérique</strong></p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Sol Numérique. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>

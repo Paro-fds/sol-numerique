@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .celebration {
+      text-align: center;
+      font-size: 100px;
+      margin: 20px 0;
+    }
+    .success-box {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      padding: 30px;
+      margin: 20px 0;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .success-box h2 {
+      color: #28a745;
+      margin: 0 0 10px 0;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 30px 0;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      color: #28a745;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 Sol Terminé avec Succès ! 🎉</h1>
+    </div>
+    <div class="content">
+      <div class="celebration">🏆</div>
+      
+      <h2 style="text-align: center; color: #28a745;">Félicitations {{firstname}} !</h2>
+      
+      <div class="success-box">
+        <h2>Le Sol "{{solName}}" est maintenant terminé</h2>
+        <p>Tous les tours ont été complétés avec succès !</p>
+      </div>
+
+      <p>Vous avez participé à un Sol qui s'est déroulé avec succès. Tous les participants ont reçu leur tour.</p>
+
+      <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <p><strong>💡 Le saviez-vous ?</strong></p>
+        <p>Vous pouvez maintenant créer un nouveau Sol ou rejoindre d'autres Sols disponibles sur la plateforme.</p>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="http://localhost:5173/sols" class="button">Explorer les Sols</a>
+      </div>
+
+      <p>Merci d'avoir utilisé Sol Numérique pour gérer votre tontine !</p>
+      
+      <p>Cordialement,<br>
+      <strong>L'équipe Sol Numérique</strong></p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Sol Numérique. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>

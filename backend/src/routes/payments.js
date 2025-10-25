@@ -1,68 +1,117 @@
 const express = require('express');
-const multer = require('multer');
-const { body } = require('express-validator');
-const paymentController = require('../controllers/paymentController');
-const AuthMiddleware = require('../middleware/auth');
-const ErrorHandler = require('../middleware/errorHandler');
-
 const router = express.Router();
+const paymentController = require('../controllers/paymentController');
+const { authenticateToken } = require('../middleware/auth');
+const multer = require('multer');
 
-// Configuration Multer pour l'upload de fichiers
+// Configuration multer
+const storage = multer.memoryStorage();
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB max
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'), false);
+      cb(new Error('Type de fichier non autorisé'), false);
     }
   }
 });
 
-// Toutes les routes nécessitent l'authentification
-router.use(AuthMiddleware.authenticateToken);
+// ========================================
+// ROUTES SPÉCIFIQUES EN PREMIER
+// ========================================
 
-// POST /api/payments/stripe/create-session - Créer une session Stripe
-router.post('/stripe/create-session',
-  [
-    body('participationId').isInt().withMessage('Participation ID is required'),
-    body('amount').isFloat({ min: 0 }).withMessage('Valid amount is required')
-  ],
-  ErrorHandler.asyncWrapper(paymentController.createStripeSession)
-);
-
-// POST /api/payments/upload-receipt - Upload un reçu
-router.post('/upload-receipt',
-  upload.single('receipt'),
-  [
-    body('participationId').isInt().withMessage('Participation ID is required')
-  ],
-  ErrorHandler.asyncWrapper(paymentController.uploadReceipt)
-);
-
-// GET /api/payments/history - Historique des paiements
-router.get('/history',
-  ErrorHandler.asyncWrapper(paymentController.getPaymentHistory)
-);
-
-// GET /api/payments/:id - Obtenir un paiement
-router.get('/:id',
-  ErrorHandler.asyncWrapper(paymentController.getPayment)
-);
-
-// GET /api/payments/:id/receipt - Télécharger un reçu
-router.get('/:id/receipt',
-  ErrorHandler.asyncWrapper(paymentController.downloadReceipt)
-);
-
-// POST /api/payments/webhook - Webhook Stripe (pas d'auth)
-router.post('/webhook',
+// Webhook Stripe (SANS authentification)
+router.post('/stripe/webhook',
   express.raw({ type: 'application/json' }),
-  ErrorHandler.asyncWrapper(paymentController.handleStripeWebhook)
+  paymentController.handleStripeWebhook
 );
 
+// ========================================
+// ROUTES AUTHENTIFIÉES
+// ========================================
+
+// Créer une session Stripe
+router.post('/create-stripe-session',
+  authenticateToken,
+  paymentController.createStripeSession
+);
+
+// Upload d'un reçu
+router.post('/upload-receipt',
+  authenticateToken,
+  upload.single('receipt'),
+  paymentController.uploadReceipt
+);
+
+// Historique des paiements
+router.get('/history',
+  authenticateToken,
+  paymentController.getPaymentHistory
+);
+
+// ========================================
+// ROUTES ADMIN (AVANT /:id)
+// ========================================
+
+// Obtenir les reçus en attente de validation
+router.get('/pending-receipts',
+  authenticateToken,
+  paymentController.getPendingReceipts
+);
+
+// ✅ Obtenir les paiements validés en attente de transfert
+router.get('/pending-transfers',
+  authenticateToken,
+  paymentController.getPendingTransfers
+);
+
+// ========================================
+// ROUTES AVEC PARAMÈTRES :id (EN DERNIER)
+// ========================================
+
+// Obtenir l'URL d'un reçu
+router.get('/:id/receipt-url',
+  authenticateToken,
+  paymentController.getReceiptUrl
+);
+
+// Télécharger un reçu
+router.get('/:id/receipt',
+  authenticateToken,
+  paymentController.downloadReceipt
+);
+
+// Valider un paiement (admin)
+router.post('/:id/validate',
+  authenticateToken,
+  paymentController.validatePayment
+);
+
+// Rejeter un paiement (admin)
+router.post('/:id/reject',
+  authenticateToken,
+  paymentController.rejectPayment
+);
+
+// ✅ Marquer un paiement comme transféré (admin)
+router.post('/:id/mark-transferred',
+  authenticateToken,
+  paymentController.markAsTransferred
+);
+
+// Obtenir un paiement spécifique
+router.get('/:id',
+  authenticateToken,
+  paymentController.getPayment
+);
+// Transférer tous les paiements d'un Sol (admin)
+router.post('/sols/:solId/transfer-all',
+  authenticateToken,
+  paymentController.transferAllPayments
+);
 module.exports = router;

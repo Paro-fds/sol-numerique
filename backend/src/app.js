@@ -11,6 +11,12 @@ const logger = require('./utils/logger');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const solRoutes = require('./routes/sols');
+const paymentRoutes = require('./routes/payments');
+const adminRoutes = require('./routes/admin');
+const exportRoutes = require('./routes/export'); 
+//const transferRoutes = require('./routes/transfer');  // ⭐ AJOUTER CETTE LIGNE
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -67,7 +73,21 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Parsing du body
+// ⚠️ CRITIQUE: Webhook Stripe AVANT express.json()
+// Le webhook nécessite express.raw() et ne doit pas utiliser express.json()
+app.post('/api/payments/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res, next) => {
+    try {
+      const paymentController = require('./controllers/paymentController');
+      await paymentController.handleStripeWebhook(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ✅ Parsing du body (APRÈS le webhook)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -127,6 +147,9 @@ app.get('/', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     endpoints: {
       auth: '/api/auth',
+      sols: '/api/sols',
+      payments: '/api/payments',
+      admin: '/api/admin',
       health: '/health',
       'health-db': '/health/db'
     },
@@ -134,23 +157,50 @@ app.get('/', (req, res) => {
   });
 });
 
-// Routes API
+// ✅ Routes API
 app.use('/api/auth', authRoutes);
-app.use('/api/sols', require('./routes/sols'));  // ← Ajoutez cette ligne
-app.use('/api/payments', require('./routes/payments')); 
-app.use('/api/admin', require('./routes/admin')); 
+app.use('/api/sols', solRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/export', exportRoutes);
+app.use('/api/tours', require('./routes/tours')); // ✅ AJOUTER
+//app.use('/api/transfers', transferRoutes);  // ⭐ AJOUTER CETTE LIGNE
+app.use('/api/transfers', require('./routes/transfer'));
+app.use('/api/users', userRoutes);
+logger.info('✅ All routes loaded successfully');
 
 // Route pour servir les fichiers uploadés (en développement)
 if (process.env.NODE_ENV === 'development') {
   const path = require('path');
   const uploadsPath = path.join(__dirname, '..', 'uploads');
   app.use('/uploads', express.static(uploadsPath));
+  logger.info(`✅ Uploads directory: ${uploadsPath}`);
 }
 
 // Middleware pour les routes non trouvées
-app.use('*', errorHandler.notFound);
+app.use('*', (req, res) => {
+  logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    method: req.method,
+    path: req.originalUrl
+  });
+});
 
 // Gestionnaire d'erreurs global (doit être en dernier)
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  logger.error('Global error handler:', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path
+  });
+  
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
 
 module.exports = app;

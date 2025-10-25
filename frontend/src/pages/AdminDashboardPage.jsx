@@ -8,7 +8,15 @@ import {
   CardContent,
   CardActionArea,
   CircularProgress,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Paper
 } from '@mui/material';
 import {
   People,
@@ -17,15 +25,16 @@ import {
   TrendingUp,
   AttachMoney,
   PersonAdd,
-  Payment
+  Payment,
+  CheckCircle
 } from '@mui/icons-material';
-import { adminAPI } from '../services/api';
-import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadStats();
@@ -34,11 +43,14 @@ const AdminDashboardPage = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.getDashboardStats();
+      setError(null);
+      
+      const response = await api.get('/admin/dashboard'); // ✅ Utiliser /dashboard au lieu de /dashboard-stats
+      console.log('📊 Stats received:', response.data);
       setStats(response.data.stats);
     } catch (error) {
       console.error('Error loading stats:', error);
-      toast.error('Erreur lors du chargement des statistiques');
+      setError('Erreur lors du chargement des statistiques');
     } finally {
       setLoading(false);
     }
@@ -48,6 +60,17 @@ const AdminDashboardPage = () => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
         <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Chargement des statistiques...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       </Box>
     );
   }
@@ -58,25 +81,27 @@ const AdminDashboardPage = () => {
       value: stats?.pendingReceipts || 0,
       icon: <Receipt sx={{ fontSize: 40 }} />,
       color: 'warning.main',
-      bgColor: 'warning.light',
+      bgColor: 'rgba(237, 108, 2, 0.1)',
       path: '/admin/receipts',
-      action: 'Valider'
+      action: 'Valider',
+      urgent: stats?.pendingReceipts > 0
     },
     {
-      title: 'Virements à Effectuer',
+      title: 'Transferts à Effectuer',
       value: stats?.pendingTransfers || 0,
       icon: <AccountBalanceWallet sx={{ fontSize: 40 }} />,
       color: 'info.main',
-      bgColor: 'info.light',
+      bgColor: 'rgba(2, 136, 209, 0.1)',
       path: '/admin/transfers',
-      action: 'Gérer'
+      action: 'Gérer',
+      urgent: stats?.pendingTransfers > 0
     },
     {
-      title: 'Total Utilisateurs',
+      title: 'Utilisateurs Actifs',
       value: stats?.totalUsers || 0,
       icon: <People sx={{ fontSize: 40 }} />,
       color: 'primary.main',
-      bgColor: 'primary.light',
+      bgColor: 'rgba(25, 118, 210, 0.1)',
       path: '/admin/users',
       action: 'Voir'
     },
@@ -85,38 +110,50 @@ const AdminDashboardPage = () => {
       value: stats?.activeSols || 0,
       icon: <TrendingUp sx={{ fontSize: 40 }} />,
       color: 'success.main',
-      bgColor: 'success.light',
+      bgColor: 'rgba(46, 125, 50, 0.1)',
       path: '/sols',
       action: 'Consulter'
     },
     {
-      title: 'Total Transactions',
-      value: `${(stats?.totalTransactions || 0).toFixed(2)}€`,
+      title: 'Volume Total',
+      value: `${(stats?.totalTransactions || 0).toLocaleString()} HTG`,
       icon: <AttachMoney sx={{ fontSize: 40 }} />,
       color: 'success.main',
-      bgColor: 'success.light',
+      bgColor: 'rgba(46, 125, 50, 0.1)',
       path: '/admin/reports',
-      action: 'Rapports'
+      action: 'Détails'
     },
     {
-      title: 'Nouveaux Utilisateurs (Mois)',
+      title: 'Nouveaux Membres (Mois)',
       value: stats?.newUsersThisMonth || 0,
       icon: <PersonAdd sx={{ fontSize: 40 }} />,
       color: 'secondary.main',
-      bgColor: 'secondary.light',
+      bgColor: 'rgba(156, 39, 176, 0.1)',
       path: '/admin/users',
       action: 'Voir'
     },
     {
       title: 'Paiements (Mois)',
       value: stats?.paymentsThisMonth || 0,
+      subtitle: `${(stats?.monthlyRevenue || 0).toLocaleString()} HTG`,
       icon: <Payment sx={{ fontSize: 40 }} />,
       color: 'info.main',
-      bgColor: 'info.light',
+      bgColor: 'rgba(2, 136, 209, 0.1)',
       path: '/admin/reports',
-      action: 'Détails'
+      action: 'Voir'
     }
   ];
+
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'pending': { label: 'En attente', color: 'default' },
+      'uploaded': { label: 'Reçu uploadé', color: 'warning' },
+      'validated': { label: 'Validé', color: 'success' },
+      'transferred': { label: 'Transféré', color: 'info' },
+      'rejected': { label: 'Rejeté', color: 'error' }
+    };
+    return statusMap[status] || { label: status, color: 'default' };
+  };
 
   return (
     <Box>
@@ -132,7 +169,7 @@ const AdminDashboardPage = () => {
 
       {/* Alertes importantes */}
       {stats?.pendingReceipts > 0 && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
+        <Alert severity="warning" sx={{ mb: 2 }} icon={<Receipt />}>
           <Typography variant="body2">
             <strong>{stats.pendingReceipts} reçu(s)</strong> en attente de validation
           </Typography>
@@ -140,24 +177,26 @@ const AdminDashboardPage = () => {
       )}
 
       {stats?.pendingTransfers > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: 2 }} icon={<AccountBalanceWallet />}>
           <Typography variant="body2">
-            <strong>{stats.pendingTransfers} virement(s)</strong> à effectuer
+            <strong>{stats.pendingTransfers} Sol(s)</strong> avec paiements à transférer
           </Typography>
         </Alert>
       )}
 
       {/* Cartes de statistiques */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map((card, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
             <Card
               sx={{
                 height: '100%',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                transition: 'all 0.3s',
+                border: card.urgent ? '2px solid' : '1px solid',
+                borderColor: card.urgent ? card.color : 'divider',
                 '&:hover': {
                   transform: 'translateY(-4px)',
-                  boxShadow: 4,
+                  boxShadow: 6,
                 }
               }}
             >
@@ -167,14 +206,19 @@ const AdminDashboardPage = () => {
               >
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom variant="body2">
+                    <Box sx={{ flex: 1 }}>
+                      <Typography color="textSecondary" gutterBottom variant="body2" sx={{ fontSize: '0.75rem' }}>
                         {card.title}
                       </Typography>
-                      <Typography variant="h3" sx={{ fontWeight: 700, my: 2 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 700, my: 1.5, color: card.color }}>
                         {card.value}
                       </Typography>
-                      <Typography variant="body2" color="primary">
+                      {card.subtitle && (
+                        <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                          {card.subtitle}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" sx={{ color: card.color, fontWeight: 600 }}>
                         {card.action} →
                       </Typography>
                     </Box>
@@ -199,58 +243,125 @@ const AdminDashboardPage = () => {
         ))}
       </Grid>
 
-      {/* Actions rapides */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-          Actions Rapides
-        </Typography>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }}
-              onClick={() => navigate('/admin/receipts')}
-            >
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <Receipt sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-                <Typography variant="body2">Valider les Reçus</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }}
-              onClick={() => navigate('/admin/users')}
-            >
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <People sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                <Typography variant="body2">Gérer les Utilisateurs</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }}
-              onClick={() => navigate('/admin/reports')}
-            >
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <TrendingUp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                <Typography variant="body2">Voir les Rapports</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }}
-              onClick={() => navigate('/sols')}
-            >
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <AccountBalanceWallet sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-                <Typography variant="body2">Consulter les Sols</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
+      {/* Statistiques des Sols */}
+      {stats?.solsStats && (
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+              📊 État des Sols
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6} sm={3}>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(25, 118, 210, 0.05)', borderRadius: 2 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    {stats.solsStats.total}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Total</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(46, 125, 50, 0.05)', borderRadius: 2 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+                    {stats.solsStats.actifs}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Actifs</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(156, 39, 176, 0.05)', borderRadius: 2 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'secondary.main' }}>
+                    {stats.solsStats.termines}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Terminés</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(237, 108, 2, 0.05)', borderRadius: 2 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                    {stats.solsStats.en_attente}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">En attente</Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activité Récente */}
+      {stats?.recentActivity && stats.recentActivity.length > 0 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+              🕒 Activité Récente
+            </Typography>
+            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ bgcolor: 'grey.50' }}>
+                    <TableCell><strong>Utilisateur</strong></TableCell>
+                    <TableCell><strong>Sol</strong></TableCell>
+                    <TableCell><strong>Montant</strong></TableCell>
+                    <TableCell><strong>Méthode</strong></TableCell>
+                    <TableCell><strong>Statut</strong></TableCell>
+                    <TableCell><strong>Date</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stats.recentActivity.map((activity) => {
+                    const statusInfo = getStatusLabel(activity.status);
+                    return (
+                      <TableRow key={activity.id} hover>
+                        <TableCell>{activity.user}</TableCell>
+                        <TableCell>{activity.solName}</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          {activity.amount.toLocaleString()} HTG
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={activity.method === 'stripe' ? 'Stripe' : 'Hors ligne'} 
+                            size="small"
+                            variant="outlined"
+                            color={activity.method === 'stripe' ? 'primary' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={statusInfo.label} 
+                            size="small"
+                            color={statusInfo.color}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {new Date(activity.date).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Message si aucune activité */}
+      {stats?.recentActivity && stats.recentActivity.length === 0 && (
+        <Card sx={{ textAlign: 'center', py: 6 }}>
+          <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+            Aucune activité récente
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Les paiements et transactions apparaîtront ici
+          </Typography>
+        </Card>
+      )}
     </Box>
   );
 };

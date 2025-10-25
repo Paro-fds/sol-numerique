@@ -68,10 +68,36 @@ class AuthController {
         token: accessToken,
         mfaRequired: false
       });
+// ✅ ENVOYER L'EMAIL DE BIENVENUE
+    try {
+      const emailService = require('../services/emailService');
+      await emailService.sendWelcomeEmail({
+        email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname
+      });
+      logger.info('Welcome email sent', { userId: user.id });
+    } catch (emailError) {
+      // Ne pas bloquer l'inscription si l'email échoue
+      logger.error('Failed to send welcome email:', emailError);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Utilisateur créé avec succès',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname
+      }
+    });
+
 
     } catch (error) {
       next(error);
     }
+
   }
 
   async login(req, res, next) {
@@ -228,6 +254,42 @@ class AuthController {
           error: 'Invalid refresh token'
         });
       }
+      next(error);
+    }
+  }
+
+  /**
+   * ⭐ NOUVELLE MÉTHODE AJOUTÉE ⭐
+   * Vérifier le token JWT
+   * @route   GET /api/auth/verify
+   * @access  Private
+   */
+  async verifyToken(req, res, next) {
+    try {
+      // Le middleware AuthMiddleware.authenticateToken a déjà vérifié le token
+      // et a ajouté req.user avec toutes les infos
+      
+      const user = await User.findById(req.user.userId);
+      
+      if (!user || !user.is_active) {
+        return res.status(404).json({
+          error: 'User not found or inactive'
+        });
+      }
+
+      logger.audit('TOKEN_VERIFIED', user.id, {
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      // Retourner les infos utilisateur
+      res.json({
+        valid: true,
+        user: user.toJSON()
+      });
+
+    } catch (error) {
+      logger.error('Token verification error:', error);
       next(error);
     }
   }

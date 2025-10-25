@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Notification d’un nouveau participant pour le Sol numérique.">
+  <title>Notification – Nouveau participant au Sol</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #222;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .participant-card {
+      background: #f8f9fa;
+      border: 2px solid #667eea;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
+    .progress-indicator {
+      background: #e9ecef;
+      border-radius: 10px;
+      height: 30px;
+      margin: 20px 0;
+      overflow: hidden;
+      position: relative;
+    }
+    /* VS Code-safe placeholder width — remplacée dynamiquement côté serveur */
+    .progress-fill {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100%;
+      transition: width 0.3s ease;
+      width: 0%; /* Valeur par défaut — remplacée dynamiquement */
+    }
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #333;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    .button:hover {
+      background: #5a67d8;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>👥 Nouveau Participant</h1>
+    </div>
+    <div class="content">
+      <h2>Bonjour {{firstname}},</h2>
+      
+      <p>Bonne nouvelle ! Un nouveau participant a rejoint votre Sol <strong>{{solName}}</strong>.</p>
+      
+      <div class="participant-card">
+        <h3 style="margin-top: 0; color: #667eea;">👤 {{participantName}}</h3>
+        <p><strong>📧 Email :</strong> {{participantEmail}}</p>
+      </div>
+
+      <p><strong>Progression du Sol :</strong></p>
+      <div class="progress-indicator">
+        <!-- Valeur Handlebars échappée dans un commentaire pour éviter les erreurs VS Code -->
+        <div class="progress-fill" style="width: /*{{progressPercent}}*/ 0%;"></div>
+        <div class="progress-text">{{currentParticipants}} / {{maxParticipants}} participants</div>
+      </div>
+
+      {{#if (eq currentParticipants maxParticipants)}}
+        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <p><strong>🎉 Sol complet !</strong></p>
+          <p>Votre Sol a atteint le nombre maximum de participants. Vous pouvez maintenant définir l'ordre des tours et démarrer le Sol.</p>
+        </div>
+      {{else}}
+        <div style="background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <p><strong>ℹ️ En attente</strong></p>
+          <p>Il manque encore {{remainingSlots}} participant(s) pour compléter le Sol.</p>
+        </div>
+      {{/if}}
+
+      <div style="text-align: center;">
+        <a href="{{baseUrl}}/sols/{{solId}}" class="button">Gérer le Sol</a>
+      </div>
+
+      <p>Merci d’animer cette communauté !</p>
+      
+      <p>Cordialement,<br>
+      <strong>L’équipe Sol Numérique</strong></p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Sol Numérique. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>

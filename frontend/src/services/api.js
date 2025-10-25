@@ -150,8 +150,17 @@ export const solAPI = {
   // Liste des sols
   getSols: (filters = {}) => api.get('/api/sols', { params: filters }),
   
+  // ✅ NOUVEAU - Liste des sols disponibles à rejoindre
+  getAvailableSols: () => api.get('/api/sols/available'),
+  
+  // ✅ NOUVEAU - Mes sols
+  getMySols: () => api.get('/api/sols/my-sols'),
+  
   // Détails d'un sol
   getSol: (solId) => api.get(`/api/sols/${solId}`),
+  
+  // ✅ NOUVEAU - Détails complets d'un sol (avec participants)
+  getSolDetails: (solId) => api.get(`/api/sols/${solId}/details`),
   
   // Créer un sol
   createSol: (solData) => api.post('/api/sols', solData),
@@ -178,37 +187,82 @@ export const solAPI = {
 // === SERVICE DES PAIEMENTS ===
 export const paymentAPI = {
   // Créer une session Stripe
-  createStripeSession: (participationId, amount) => 
-    api.post('/api/payments/stripe/create-session', { participationId, amount }),
-  
-  // Upload d'un reçu
+  createStripeSession: (data) => {
+    return api.post('/api/payments/create-stripe-session', data);
+  },
+
+  // Upload un reçu
   uploadReceipt: (participationId, file) => {
     const formData = new FormData();
     formData.append('participationId', participationId);
     formData.append('receipt', file);
     
     return api.post('/api/payments/upload-receipt', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
   },
-  
-  // Historique des paiements
-  getPaymentHistory: () => api.get('/api/payments/history'),
-  
-  // Détails d'un paiement
-  getPayment: (paymentId) => api.get(`/api/payments/${paymentId}`),
-  
+
+  // Obtenir l'historique des paiements
+  getPaymentHistory: (params) => {
+    return api.get('/api/payments/history', { params });
+  },
+
+  // Obtenir un paiement
+  getPayment: (paymentId) => {
+    return api.get(`/api/payments/${paymentId}`);
+  },
+
+  // Valider un paiement (admin)
+  validatePayment: (paymentId, data) => {
+    return api.post(`/api/payments/${paymentId}/validate`, data);
+  },
+
+  // Rejeter un paiement (admin)
+  rejectPayment: (paymentId, data) => {
+    return api.post(`/api/payments/${paymentId}/reject`, data);
+  },
+
+  // Obtenir les reçus en attente (admin)
+  getPendingReceipts: () => {
+    return api.get('/api/payments/pending-receipts');
+  },
+
+  // Obtenir l'URL d'un reçu
+  getReceiptUrl: (paymentId) => {
+    return api.get(`/api/payments/${paymentId}/receipt-url`);
+  },
+
   // Télécharger un reçu
-  downloadReceipt: (paymentId) => api.get(`/api/payments/${paymentId}/receipt`, {
-    responseType: 'blob'
-  }),
-  
-  // Annuler un paiement
-  cancelPayment: (paymentId) => api.post(`/api/payments/${paymentId}/cancel`),
+  downloadReceipt: (paymentId) => {
+    return api.get(`/api/payments/${paymentId}/download`, {
+      responseType: 'blob'
+    });
+  },
+
+  // Marquer comme transféré (admin)
+  markAsTransferred: (paymentId, data) => {
+    return api.post(`/api/payments/${paymentId}/transfer`, data);
+  },
+
+  // Obtenir les transferts en attente (admin)
+  getPendingTransfers: () => {
+    return api.get('/api/payments/pending-transfers');
+  },
+
+  // Transférer tous les paiements d'un Sol (admin)
+  transferAllPayments: (solId, data) => {
+    return api.post(`/api/sols/${solId}/transfer-all`, data);
+  }
 };
+ 
+
+
 
 // === SERVICE D'ADMINISTRATION ===
 export const adminAPI = {
+  // === REÇUS ===
   // Reçus en attente
   getPendingReceipts: () => api.get('/api/admin/receipts/pending'),
   
@@ -216,6 +270,7 @@ export const adminAPI = {
   validateReceipt: (paymentId, status, notes = '') => 
     api.post(`/api/admin/receipts/${paymentId}/validate`, { status, notes }),
   
+  // === VIREMENTS ===
   // Virements à effectuer
   getTransferRequests: () => api.get('/api/admin/transfers/pending'),
   
@@ -223,11 +278,30 @@ export const adminAPI = {
   markTransferCompleted: (paymentId, notes = '') => 
     api.post(`/api/admin/transfers/${paymentId}/complete`, { notes }),
   
-  // Gestion des utilisateurs
+  // === GESTION DES UTILISATEURS ===
+  // Liste des utilisateurs
   getUsers: (filters = {}) => api.get('/api/admin/users', { params: filters }),
-  updateUserStatus: (userId, status) => 
-    api.put(`/api/admin/users/${userId}/status`, { status }),
   
+  // ✅ NOUVEAU - Détails d'un utilisateur
+  getUserById: (userId) => api.get(`/api/admin/users/${userId}`),
+  
+  // ✅ NOUVEAU - Créer un utilisateur
+  createUser: (userData) => api.post('/api/admin/users', userData),
+  
+  // ✅ NOUVEAU - Mettre à jour un utilisateur
+  updateUser: (userId, userData) => api.put(`/api/admin/users/${userId}`, userData),
+  
+  // Changer le statut d'un utilisateur
+  updateUserStatus: (userId, status) => 
+    api.patch(`/api/admin/users/${userId}/status`, { status }),
+  
+  // ✅ NOUVEAU - Supprimer un utilisateur
+  deleteUser: (userId) => api.delete(`/api/admin/users/${userId}`),
+  
+  // ✅ NOUVEAU - Statistiques utilisateurs
+  getUsersStats: () => api.get('/api/admin/users/stats'),
+  
+  // === RAPPORTS ===
   // Rapports et statistiques
   getReports: (filters = {}) => api.get('/api/admin/reports', { params: filters }),
   exportReport: (format, filters = {}) => 
@@ -238,6 +312,10 @@ export const adminAPI = {
   
   // Dashboard admin
   getDashboardStats: () => api.get('/api/admin/dashboard'),
+  
+  // ✅ NOUVEAU - Générer et envoyer un reçu PDF par email
+  generateAndSendReceipt: (paymentId) => 
+    api.post('/api/admin/receipts/generate-receipt', { paymentId }),
 };
 
 // === SERVICE DES FICHIERS ===
@@ -260,11 +338,105 @@ export const fileAPI = {
   getFileUrl: (filename) => `${API_BASE_URL}/uploads/${filename}`,
 };
 
+// === SERVICE PDF ===
+export const pdfAPI = {
+  // Générer un reçu PDF
+  generateReceipt: (paymentData) => 
+    api.post('/api/pdf/generate-receipt', paymentData, {
+      responseType: 'blob'
+    }),
+  
+  // Générer un rapport mensuel PDF
+  generateMonthlyReport: (reportData) => 
+    api.post('/api/pdf/generate-report', reportData, {
+      responseType: 'blob'
+    }),
+  
+  // Télécharger un reçu existant
+  downloadReceipt: (receiptId) => 
+    api.get(`/api/pdf/receipts/${receiptId}`, {
+      responseType: 'blob'
+    }),
+};
+
 // === SERVICE DE SANTÉ DE L'API ===
 export const healthAPI = {
   checkHealth: () => api.get('/health'),
   checkDatabase: () => api.get('/health/db'),
 };
+// Intercepteur pour gérer les réponses et erreurs
+api.interceptors.response.use(
+  (response) => {
+    // Log des réponses en développement
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    }
+    return response;
+  },
+  (error) => {
+    // ✅ NOUVEAU : Ignorer silencieusement les 403 sur pending-transfers
+    if (
+      error.response?.status === 403 &&
+      error.config?.url?.includes('/pending-transfers')
+    ) {
+      console.log('👤 Access denied to pending-transfers (not admin) - returning empty data');
+      return Promise.resolve({ 
+        data: { 
+          success: true,
+          count: 0, 
+          transfers: [] 
+        } 
+      });
+    }
+
+    console.error('Response error:', error);
+    
+    // Gestion des erreurs par code de statut
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      switch (status) {
+        case 401:
+          // Token expiré ou invalide
+          removeAuthToken();
+          if (window.location.pathname !== '/login') {
+            toast.error('Session expirée. Veuillez vous reconnecter.');
+            window.location.href = '/login';
+          }
+          break;
+          
+        case 403:
+          // ✅ Ne pas afficher toast pour pending-transfers
+          if (!error.config?.url?.includes('/pending-transfers')) {
+            toast.error('Accès interdit');
+          }
+          break;
+          
+        case 404:
+          toast.error('Ressource non trouvée');
+          break;
+          
+        case 429:
+          toast.error('Trop de requêtes. Veuillez patienter.');
+          break;
+          
+        case 500:
+          toast.error('Erreur serveur. Veuillez réessayer plus tard.');
+          break;
+          
+        default:
+          const message = data?.error || data?.message || 'Une erreur est survenue';
+          toast.error(message);
+      }
+    } else if (error.request) {
+      toast.error('Erreur de connexion. Vérifiez votre connexion internet.');
+    } else {
+      toast.error('Une erreur inattendue est survenue');
+    }
+    
+    return Promise.reject(error);
+  });
+
 
 // Export par défaut de l'instance axios configurée
 export default api;

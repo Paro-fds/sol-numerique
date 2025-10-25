@@ -20,6 +20,9 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // ✅ NOUVEAU : Calculer isAdmin comme état dérivé
+  const isAdmin = user?.role === 'admin';
+
   // Charger l'utilisateur depuis le localStorage au démarrage
   useEffect(() => {
     const initializeAuth = async () => {
@@ -36,6 +39,12 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             setIsAuthenticated(true);
             setAuthToken(token);
+            
+            console.log('✅ Auth initialized', {
+              userId: userData.id,
+              role: userData.role,
+              isAdmin: userData.role === 'admin'
+            });
           } catch (error) {
             // Token invalide, nettoyer
             console.warn('Token invalid, clearing auth data');
@@ -61,17 +70,20 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token, mfaRequired } = response.data;
 
       if (mfaRequired) {
-        // Retourner l'information MFA sans authentifier complètement
         return { success: true, mfaRequired: true };
       }
 
-      // Connexion réussie
       setUser(userData);
       setIsAuthenticated(true);
       setAuthToken(token);
       
-      // Sauvegarder dans le localStorage
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      console.log('✅ Login successful', {
+        userId: userData.id,
+        role: userData.role,
+        isAdmin: userData.role === 'admin'
+      });
       
       toast.success(`Bienvenue ${userData.firstname} !`);
       
@@ -149,11 +161,12 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Nettoyer l'état local dans tous les cas
       setUser(null);
       setIsAuthenticated(false);
       removeAuthToken();
       localStorage.removeItem('user');
+      
+      console.log('✅ Logout successful');
       
       toast.success('Déconnexion réussie');
     }
@@ -165,7 +178,6 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       await authAPI.updateProfile(profileData);
       
-      // Récupérer le profil mis à jour
       const response = await authAPI.getProfile();
       const updatedUser = response.data.user;
       
@@ -216,7 +228,6 @@ export const AuthProvider = ({ children }) => {
       return userData;
     } catch (error) {
       console.error('Refresh profile error:', error);
-      // En cas d'erreur, déconnecter l'utilisateur
       logout();
       return null;
     }
@@ -239,7 +250,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.verifyMFA(token);
       
-      // Rafraîchir le profil utilisateur pour obtenir le statut MFA mis à jour
       await refreshProfile();
       
       toast.success(response.data.message);
@@ -256,7 +266,6 @@ export const AuthProvider = ({ children }) => {
     try {
       await authAPI.disableMFA(password);
       
-      // Rafraîchir le profil
       await refreshProfile();
       
       toast.success('MFA désactivé avec succès');
@@ -274,8 +283,8 @@ export const AuthProvider = ({ children }) => {
     return user?.role === role;
   };
 
-  // Vérifier si l'utilisateur est admin
-  const isAdmin = () => {
+  // ✅ Fonction isAdmin (garde la fonction pour rétro-compatibilité)
+  const isAdminFunc = () => {
     return hasRole('admin');
   };
 
@@ -285,6 +294,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isLoading,
     isAuthenticated,
+    isAdmin, // ✅ Propriété boolean
     
     // Actions d'authentification
     login,
@@ -304,7 +314,7 @@ export const AuthProvider = ({ children }) => {
     
     // Utilitaires
     hasRole,
-    isAdmin,
+    isAdminFunc, // ✅ Fonction (renommée pour éviter conflit)
   };
 
   return (

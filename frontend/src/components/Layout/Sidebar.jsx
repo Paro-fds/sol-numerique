@@ -10,7 +10,8 @@ import {
   Box,
   Typography,
   Divider,
-  Chip
+  Chip,
+  Badge
 } from '@mui/material';
 import {
   Dashboard,
@@ -21,10 +22,13 @@ import {
   Receipt,
   TrendingUp,
   Settings,
-  Help
+  Help,
+  Search,
+  AccountBalance
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
+import { usePendingTransfers } from '../../hooks/usePendingTransfers';
 
 const DRAWER_WIDTH = 250;
 
@@ -32,6 +36,13 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = useAuth();
+  
+  // ✅ Hook conditionnellement appelé
+  const pendingTransfersHook = usePendingTransfers();
+  const pendingTransfersCount = isAdmin ? pendingTransfersHook.count : 0;
+
+   // ✅ DEBUG
+  
 
   // Configuration des éléments de navigation
   const navigationItems = [
@@ -46,6 +57,13 @@ const Sidebar = () => {
       icon: <AccountBalanceWallet />,
       path: '/sols',
       description: 'Gestion des sols'
+    },
+    {
+      text: 'Parcourir les Sols',
+      icon: <Search />,
+      path: '/sols/join',
+      description: 'Rejoindre un sol',
+      isNew: true
     },
     {
       text: 'Paiements',
@@ -67,14 +85,28 @@ const Sidebar = () => {
       text: 'Administration',
       icon: <AdminPanelSettings />,
       path: '/admin',
-      description: 'Panel administrateur',
+      description: 'Panel administrateur'
+    },
+    {
+      text: 'Gestion Utilisateurs',
+      icon: <People />,
+      path: '/admin/users',
+      description: 'Gérer les utilisateurs'
+    },
+    {
+      text: 'Validation Paiements',
+      icon: <Receipt />,
+      path: '/admin/payments',
+      description: 'Valider les paiements',
       isNew: true
     },
     {
-      text: 'Validation Reçus',
-      icon: <Receipt />,
-      path: '/admin/receipts',
-      description: 'Valider les reçus'
+      text: 'Transferts',
+      icon: <AccountBalance />,
+      path: '/admin/transfers',
+      description: 'Gérer les transferts',
+      badge: pendingTransfersCount, // ✅ Utilise la valeur du hook
+      isImportant: pendingTransfersCount > 0
     },
     {
       text: 'Rapports',
@@ -140,6 +172,12 @@ const Sidebar = () => {
                   minHeight: 44,
                   backgroundColor: isActive ? 'primary.main' : 'transparent',
                   color: isActive ? 'primary.contrastText' : 'text.primary',
+                  animation: item.isImportant && !isActive ? 'pulse 2s infinite' : 'none',
+                  '@keyframes pulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(255, 82, 82, 0.4)' },
+                    '70%': { boxShadow: '0 0 0 10px rgba(255, 82, 82, 0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(255, 82, 82, 0)' }
+                  },
                   '&:hover': {
                     backgroundColor: isActive
                       ? 'primary.dark'
@@ -152,7 +190,17 @@ const Sidebar = () => {
                 }}
               >
                 <ListItemIcon>
-                  {item.icon}
+                  {item.badge > 0 ? (
+                    <Badge 
+                      badgeContent={item.badge} 
+                      color="error"
+                      max={99}
+                    >
+                      {item.icon}
+                    </Badge>
+                  ) : (
+                    item.icon
+                  )}
                 </ListItemIcon>
                 
                 <ListItemText
@@ -211,39 +259,40 @@ const Sidebar = () => {
     </>
   );
 
-    return (
-      <Drawer
-        variant="permanent"
-        sx={{
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: DRAWER_WIDTH,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            backgroundColor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            boxShadow: '2px 0 8px rgba(0, 0, 0, 0.05)',
-          },
-        }}
-      >
-        <Box sx={{ width: DRAWER_WIDTH, display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h6" noWrap>
-              Sol Numérique
-            </Typography>
-          </Box>
-  
-          <Divider />
-  
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
-            <NavigationSection items={navigationItems} />
-            {isAdmin && <NavigationSection title="Administration" items={adminItems} />}
-            <NavigationSection title="Utilitaires" items={utilityItems} showDivider={false} />
-          </Box>
+          boxSizing: 'border-box',
+          backgroundColor: 'background.paper',
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.05)',
+        },
+      }}
+    >
+      <Box sx={{ width: DRAWER_WIDTH, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="h6" noWrap>
+            Sol Numérique
+          </Typography>
         </Box>
-      </Drawer>
-    );
-  };
-  
-  export default Sidebar;
+
+        <Divider />
+
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <NavigationSection items={navigationItems} />
+          {/* ✅ Section admin uniquement si isAdmin === true */}
+          {isAdmin && <NavigationSection title="ADMINISTRATION" items={adminItems} />}
+          <NavigationSection title="UTILITAIRES" items={utilityItems} showDivider={false} />
+        </Box>
+      </Box>
+    </Drawer>
+  );
+};
+
+export default Sidebar;

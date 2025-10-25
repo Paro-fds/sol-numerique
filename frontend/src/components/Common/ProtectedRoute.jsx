@@ -29,7 +29,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   // Vérifier les permissions admin si nécessaire
-  if (requireAdmin && !isAdmin()) {
+  if (requireAdmin && !isAdmin) {
     return (
       <Box
         sx={{

@@ -24,12 +24,12 @@ const CreateSolPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    nom: '',
-    description: '',
-    montant_par_periode: '',
-    frequence: 'monthly',
-    max_participants: 12
-  });
+  nom: '',
+  description: '',
+  montant_par_periode: '',
+  frequence: 'mensuel',  // ✅ CORRIGÉ : 'monthly' → 'mensuel'
+  max_participants: 12
+});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -162,16 +162,17 @@ const CreateSolPage = () => {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Fréquence</InputLabel>
-                  <Select
-                    name="frequence"
-                    value={formData.frequence}
-                    onChange={handleChange}
-                    label="Fréquence"
-                  >
-                    <MenuItem value="weekly">Hebdomadaire</MenuItem>
-                    <MenuItem value="monthly">Mensuel</MenuItem>
-                    <MenuItem value="quarterly">Trimestriel</MenuItem>
-                  </Select>
+                 <Select
+  name="frequence"
+  value={formData.frequence}
+  onChange={handleChange}
+  label="Fréquence"
+>
+  <MenuItem value="hebdomadaire">Hebdomadaire</MenuItem>  {/* ✅ CORRIGÉ */}
+  <MenuItem value="mensuel">Mensuel</MenuItem>            {/* ✅ CORRIGÉ */}
+  <MenuItem value="trimestriel">Trimestriel</MenuItem>    {/* ✅ CORRIGÉ */}
+  <MenuItem value="annuel">Annuel</MenuItem>              {/* ✅ AJOUTÉ */}
+</Select>
                 </FormControl>
               </Grid>
 
