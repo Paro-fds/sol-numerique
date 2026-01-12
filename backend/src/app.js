@@ -165,7 +165,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/tours', require('./routes/tours')); // ✅ AJOUTER
 //app.use('/api/transfers', transferRoutes);  // ⭐ AJOUTER CETTE LIGNE
-app.use('/api/transfers', require('./routes/transfer'));
+app.use('/api/transfers', require('./routes/Transfer'));
 app.use('/api/users', userRoutes);
 logger.info('✅ All routes loaded successfully');
 
